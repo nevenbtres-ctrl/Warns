@@ -1,0 +1,20 @@
+{
+  "name": "المستشارة التقنية - أبو سجاد",
+  "short_name": "المستشارة",
+  "description": "رسالة صوتية تلقائية من المستشارة التقنية",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#2c3e50",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2972/2972185.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
