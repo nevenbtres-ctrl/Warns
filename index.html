@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>المستشارة التقنية</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2c3e50">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px 20px;
+            max-width: 400px;
+            width: 100%;
+        }
+        h1 { font-size: 1.5rem; margin-bottom: 10px; color: #38bdf8; }
+        p { line-height: 1.8; font-size: 1.1rem; color: #cbd5e1; }
+        .status {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #94a3b8;
+            min-height: 1.5em;
+        }
+        .btn {
+            background: #38bdf8;
+            color: #0f172a;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            display: none; /* يظهر فقط إذا كان هناك حاجة لتفاعل إضافي */
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>المستشارة التقنية</h1>
+    <p>مرحباً، أنا المستشارة التقنية لأبو سجاد. أود تنبيهك أن مسح البرامج في هذا الملف هو أمر غير مرغوب فيه لأن هذه البرامج تخصه ويعمل بها. فإذا كنت لا تريد الاستفادة منها، اتركها ولا تمسها. ولك مني كل الاحترام والتقدير.</p>
+    <div class="status" id="status">جاري تحضير الصوت...</div>
+    <button class="btn" id="playBtn" onclick="speakText()">🔊 تشغيل الرسالة الصوتية</button>
+</div>
+
+<script>
+    const textToSpeak = "مرحباً، أنا المستشارة التقنية لأبو سجاد. أود تنبيهك أن مسح البرامج في هذا الملف هو أمر غير مرغوب فيه لأن هذه البرامج تخصه ويعمل بها. فإذا كنت لا تريد الاستفادة منها، اتركها ولا تمسها. ولك مني كل الاحترام والتقدير.";
+    
+    let voices = [];
+    let hasSpoken = false;
+    const statusEl = document.getElementById('status');
+    const playBtn = document.getElementById('playBtn');
+
+    // تحميل الأصوات المتاحة في المتصفح
+    function loadVoices() {
+        voices = window.speechSynthesis.getVoices();
+        if (voices.length > 0) {
+            statusEl.textContent = "الصوت جاهز. سيتم التشغيل تلقائياً عند التفاعل.";
+            // محاولة التشغيل التلقائي (قد تفشل في بعض المتصفحات قبل التفاعل)
+            attemptAutoPlay();
+        }
+    }
+
+    // التعامل مع تحميل الأصوات (يختلف بين المتصفحات)
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = loadVoices;
+    } else {
+        // بعض المتصفحات القديمة لا تدعم onvoiceschanged
+        setTimeout(loadVoices, 100);
+    }
+    // محاولة أولية
+    loadVoices();
+
+    // اختيار أفضل صوت أنثوي عربي متاح
+    function getBestArabicVoice() {
+        // 1. البحث عن صوت عربي (lang يبدأ بـ "ar")
+        const arabicVoices = voices.filter(v => v.lang.startsWith('ar'));
+        
+        if (arabicVoices.length > 0) {
+            // 2. محاولة العثور على صوت أنثوي (بناءً على الاسم أو الخصائص إن وجدت)
+            const femaleVoice = arabicVoices.find(v => 
+                /female|woman|girl|سيدة|أنثى|هدى|لطيفة|زينب|سلمى/i.test(v.name)
+            );
+            if (femaleVoice) return femaleVoice;
+            
+            // 3. إذا لم يوجد، نعيد أول صوت عربي متاح
+            return arabicVoices[0];
+        }
+        
+        // 4. إذا لم يوجد صوت عربي، نعود للافتراضي (قد ينطق بلكنة غريبة)
+        return null;
+    }
+
+    // دالة النطق الأساسية
+    function speakText() {
+        // إيقاف أي نطق سابق
+        window.speechSynthesis.cancel();
+
+        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+        
+        // تحديد اللغة العربية
+        utterance.lang = 'ar-SA';
+        utterance.rate = 0.95;  // سرعة هادئة وواضحة
+        utterance.pitch = 1.1;  // نبرة أعلى قليلاً لتناسب الصوت الأنثوي
+        utterance.volume = 1;
+
+        const bestVoice = getBestArabicVoice();
+        if (bestVoice) {
+            utterance.voice = bestVoice;
+            console.log("تم استخدام الصوت:", bestVoice.name, bestVoice.lang);
+        } else {
+            console.warn("لم يتم العثور على صوت عربي محدد، سيستخدم المتصفح الصوت الافتراضي.");
+        }
+
+        // أحداث التحديث
+        utterance.onstart = () => {
+            statusEl.textContent = "🔊 جاري التحدث...";
+            playBtn.style.display = 'none';
+            hasSpoken = true;
+        };
+
+        utterance.onend = () => {
+            statusEl.textContent = "✅ انتهى التحدث. شكراً لتفهمك.";
+            // إخفاء الزر إذا انتهى النطق بنجاح
+            playBtn.style.display = 'none'; 
+        };
+
+        utterance.onerror = (event) => {
+            console.error("خطأ في النطق:", event);
+            // في حال فشل التشغيل التلقائي، نظهر الزر للمستخدم
+            if (event.error === 'not-allowed' || event.error === 'interrupted') {
+                statusEl.textContent = "الرجاء الضغط على الزر لتشغيل الصوت.";
+                playBtn.style.display = 'inline-block';
+            } else {
+                statusEl.textContent = "حدث خطأ في تشغيل الصوت. تأكد من وجود صوت عربي في هاتفك.";
+                playBtn.style.display = 'inline-block';
+            }
+        };
+
+        window.speechSynthesis.speak(utterance);
+    }
+
+    // محاولة التشغيل التلقائي عند أول تفاعل من المستخدم (شرط المتصفحات)
+    function attemptAutoPlay() {
+        if (hasSpoken) return;
+
+        // دالة التفاعل الأولى
+        const firstInteraction = () => {
+            // إزالة المستمعات بعد أول مرة
+            document.removeEventListener('click', firstInteraction);
+            document.removeEventListener('touchstart', firstInteraction);
+            document.removeEventListener('keydown', firstInteraction);
+            
+            // تشغيل الصوت بعد تفاعل المستخدم
+            speakText();
+        };
+
+        document.addEventListener('click', firstInteraction);
+        document.addEventListener('touchstart', firstInteraction);
+        document.addEventListener('keydown', firstInteraction);
+        
+        // محاولة التشغيل الفوري (قد يعمل في بعض الحالات إذا كان الموقع مصرحاً له)
+        setTimeout(() => {
+            if (!hasSpoken && window.speechSynthesis) {
+                // محاولة صامتة لاختبار إذا كان التشغيل التلقائي مسموحاً
+                const testUtterance = new SpeechSynthesisUtterance("");
+                window.speechSynthesis.speak(testUtterance);
+                // إذا لم يحدث خطأ، نحاول التشغيل الفعلي
+                setTimeout(() => {
+                    if (!hasSpoken) {
+                        // ننتظر التفاعل، لكن نعلم المستخدم بالضغط على الزر
+                        playBtn.style.display = 'inline-block';
+                        statusEl.textContent = "اضغط في أي مكان لبدء الاستماع إلى الرسالة.";
+                    }
+                }, 100);
+            }
+        }, 500);
+    }
+</script>
+
+</body>
+</html>
